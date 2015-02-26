@@ -20,8 +20,11 @@ var BABYLON;
             this.inertialRadiusOffset = 0;
             this.lowerAlphaLimit = null;
             this.upperAlphaLimit = null;
-            this.lowerBetaLimit = 0.01;
-            this.upperBetaLimit = Math.PI;
+
+            // enabling 360 rotation on Beta axis
+            this.lowerBetaLimit = null;
+            this.upperBetaLimit = null;
+
             this.lowerRadiusLimit = null;
             this.upperRadiusLimit = null;
             this.angularSensibility = 1000.0;
@@ -245,7 +248,7 @@ var BABYLON;
                     // save origin touch point
                     pinchPointX1 = event.touches[0].clientX;
                     pinchPointX2 = event.touches[1].clientX;
-                    // block the camera 
+                    // block the camera
                     // if not it rotate around target during pinch
                     pinchStarted = true;
                 };
@@ -342,7 +345,10 @@ var BABYLON;
             }
             // Inertia
             if (this.inertialAlphaOffset != 0 || this.inertialBetaOffset != 0 || this.inertialRadiusOffset != 0) {
-                this.alpha += this.inertialAlphaOffset;
+
+                // changing motion direction when outside the 0-pi (modulo 2*pi) range. 
+                this.alpha += (BABYLON.Tools.Sign(Math.sin(this.beta)) * this.inertialAlphaOffset);
+
                 this.beta += this.inertialBetaOffset;
                 this.radius -= this.inertialRadiusOffset;
                 this.inertialAlphaOffset *= this.inertia;
@@ -408,7 +414,10 @@ var BABYLON;
                     }
                 }
             }
-            BABYLON.Matrix.LookAtLHToRef(this.position, target, this.upVector, this._viewMatrix);
+
+            // upside-down view when beta is outside of the 0-pi (modulo 2*pi) range.
+            BABYLON.Matrix.LookAtLHToRef(this.position, target, this.upVector.scale(BABYLON.Tools.Sign(sinb)), this._viewMatrix);
+
             this._previousAlpha = this.alpha;
             this._previousBeta = this.beta;
             this._previousRadius = this.radius;
